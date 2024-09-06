@@ -15,22 +15,6 @@ import java.util.List;
 
 public class HMCCInventoryUtils {
 
-    /**
-     * Converts from the Bukkit item slots to ProtocolLib item slots. Will produce a null if an improper bukkit item slot is sent through
-     * @param slot The BUKKIT item slot to convert.
-     * @return The ProtocolLib item slot that is returned
-     */
-    public static EquipmentSlot itemBukkitSlot(final EquipmentSlot slot) {
-        return switch (slot) {
-            case HEAD -> EquipmentSlot.HEAD;
-            case CHEST -> EquipmentSlot.CHEST;
-            case LEGS -> EquipmentSlot.LEGS;
-            case FEET -> EquipmentSlot.FEET;
-            case HAND -> EquipmentSlot.HAND;
-            case OFF_HAND -> EquipmentSlot.OFF_HAND;
-        };
-    }
-
     public static int getPacketArmorSlot(final EquipmentSlot slot) {
         return switch (slot) {
             case HEAD -> 5;
