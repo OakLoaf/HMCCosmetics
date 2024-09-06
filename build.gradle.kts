@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.hibiscusmc"
-version = "2.7.4-DEV"
+version = "2.7.4-PacketEvents"
 
 allprojects {
     apply(plugin = "java")
