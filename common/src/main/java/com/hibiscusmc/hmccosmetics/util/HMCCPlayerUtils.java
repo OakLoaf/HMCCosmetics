@@ -1,7 +1,8 @@
 package com.hibiscusmc.hmccosmetics.util;
 
-import com.comphenix.protocol.wrappers.WrappedGameProfile;
-import com.comphenix.protocol.wrappers.WrappedSignedProperty;
+import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.protocol.player.TextureProperty;
+import com.github.retrooper.packetevents.protocol.player.UserProfile;
 import com.hibiscusmc.hmccosmetics.config.Settings;
 import me.lojosho.hibiscuscommons.util.packets.PacketManager;
 import org.bukkit.Location;
@@ -14,14 +15,14 @@ import java.util.List;
 public class HMCCPlayerUtils {
 
     @Nullable
-    public static WrappedSignedProperty getSkin(Player player) {
-        WrappedSignedProperty skinData = WrappedGameProfile.fromPlayer(player).getProperties()
-                .get("textures").stream().findAny().orElse(null);
-
+    public static TextureProperty getSkin(Player player) {
+        UserProfile userProfile = PacketEvents.getAPI().getPlayerManager().getUser(player).getProfile();
+        TextureProperty skinData = userProfile.getTextureProperties().stream().findAny().orElse(null);
         if (skinData == null) {
             return null;
         }
-        return new WrappedSignedProperty("textures", skinData.getValue(), skinData.getSignature());
+
+        return skinData;
     }
 
     @NotNull

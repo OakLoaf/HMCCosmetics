@@ -1,10 +1,14 @@
 package com.hibiscusmc.hmccosmetics.util.packets;
 
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.wrappers.*;
-import com.google.common.collect.Lists;
+import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
+import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes;
+import com.github.retrooper.packetevents.protocol.player.GameMode;
+import com.github.retrooper.packetevents.protocol.player.TextureProperty;
+import com.github.retrooper.packetevents.protocol.player.UserProfile;
+import com.github.retrooper.packetevents.util.Vector3d;
+import com.github.retrooper.packetevents.wrapper.PacketWrapper;
+import com.github.retrooper.packetevents.wrapper.play.server.*;
 import com.hibiscusmc.hmccosmetics.api.HMCCosmeticsAPI;
 import com.hibiscusmc.hmccosmetics.config.Settings;
 import com.hibiscusmc.hmccosmetics.cosmetic.CosmeticSlot;
@@ -12,10 +16,9 @@ import com.hibiscusmc.hmccosmetics.user.CosmeticUser;
 import com.hibiscusmc.hmccosmetics.user.CosmeticUsers;
 import com.hibiscusmc.hmccosmetics.util.HMCCInventoryUtils;
 import com.hibiscusmc.hmccosmetics.util.HMCCPlayerUtils;
-import com.hibiscusmc.hmccosmetics.util.packets.wrappers.WrapperPlayServerNamedEntitySpawn;
-import com.hibiscusmc.hmccosmetics.util.packets.wrappers.WrapperPlayServerPlayerInfo;
-import com.hibiscusmc.hmccosmetics.util.packets.wrappers.WrapperPlayServerRelEntityMove;
+import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import me.lojosho.hibiscuscommons.util.packets.PacketManager;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
@@ -44,15 +47,16 @@ public class HMCCPacketManager extends PacketManager {
             final UUID uuid,
             final @NotNull List<Player> sendTo
     ) {
-        PacketContainer packet = new PacketContainer(PacketType.Play.Server.SPAWN_ENTITY);
-        packet.getModifier().writeDefaults();
-        packet.getUUIDs().write(0, uuid);
-        packet.getIntegers().write(0, entityId);
-        packet.getEntityTypeModifier().write(0, entityType);
-        packet.getDoubles().
-                write(0, location.getX()).
-                write(1, location.getY()).
-                write(2, location.getZ());
+        WrapperPlayServerSpawnEntity packet = new WrapperPlayServerSpawnEntity(
+            entityId,
+            uuid,
+            SpigotConversionUtil.fromBukkitEntityType(entityType),
+            SpigotConversionUtil.fromBukkitLocation(location),
+            0,
+            0,
+            new Vector3d(0, 0, 0)
+        );
+
         for (Player p : sendTo) sendPacket(p, packet);
     }
 
@@ -100,15 +104,14 @@ public class HMCCPacketManager extends PacketManager {
             int entityId,
             List<Player> sendTo
     ) {
-        PacketContainer packet = new PacketContainer(PacketType.Play.Server.ENTITY_METADATA);
-        packet.getModifier().writeDefaults();
-        packet.getIntegers().write(0, entityId);
-        final List<WrappedDataValue> wrappedDataValueList = Lists.newArrayList();
+        WrapperPlayServerEntityMetadata packet = new WrapperPlayServerEntityMetadata(
+            entityId,
+            List.of(
+                new EntityData(0, EntityDataTypes.BYTE, (byte) 0x21),
+                new EntityData(15, EntityDataTypes.BYTE, (byte) 0x10)
+            )
+        );
 
-        // 0x21 = Invisible + Fire (Aka, burns to make it not take the light of the block its in, avoiding turning it black)
-        wrappedDataValueList.add(new WrappedDataValue(0, WrappedDataWatcher.Registry.get(Byte.class), (byte) 0x21));
-        wrappedDataValueList.add(new WrappedDataValue(15, WrappedDataWatcher.Registry.get(Byte.class), (byte) 0x10));
-        packet.getDataValueCollectionModifier().write(0, wrappedDataValueList);
         for (Player p : sendTo) sendPacket(p, packet);
     }
 
@@ -116,13 +119,13 @@ public class HMCCPacketManager extends PacketManager {
             int entityId,
             List<Player> sendTo
     ) {
-        PacketContainer packet = new PacketContainer(PacketType.Play.Server.ENTITY_METADATA);
-        packet.getModifier().writeDefaults();
-        packet.getIntegers().write(0, entityId);
+        WrapperPlayServerEntityMetadata packet = new WrapperPlayServerEntityMetadata(
+            entityId,
+            List.of(
+                new EntityData(0, EntityDataTypes.BYTE, (byte) 0x20)
+            )
+        );
 
-        final List<WrappedDataValue> wrappedDataValueList = Lists.newArrayList();
-        wrappedDataValueList.add(new WrappedDataValue(0, WrappedDataWatcher.Registry.get(Byte.class), (byte) 0x20));
-        packet.getDataValueCollectionModifier().write(0, wrappedDataValueList);
         for (Player p : sendTo) sendPacket(p, packet);
     }
 
@@ -130,15 +133,13 @@ public class HMCCPacketManager extends PacketManager {
             int entityId,
             List<Player> sendTo
     ) {
-        PacketContainer packet = new PacketContainer(PacketType.Play.Server.ENTITY_METADATA);
-        packet.getModifier().writeDefaults();
-        packet.getIntegers().write(0, entityId);
-
-        final List<WrappedDataValue> wrappedDataValueList = Lists.newArrayList();
-        wrappedDataValueList.add(new WrappedDataValue(0, WrappedDataWatcher.Registry.get(Byte.class), (byte) 0x20));
-        wrappedDataValueList.add(new WrappedDataValue(8, WrappedDataWatcher.Registry.get(Float.class), 0f));
-        //wrappedDataValueList.add(new WrappedDataValue(11, WrappedDataWatcher.Registry.get(Integer.class), 21));
-        packet.getDataValueCollectionModifier().write(0, wrappedDataValueList);
+        WrapperPlayServerEntityMetadata packet = new WrapperPlayServerEntityMetadata(
+            entityId,
+            List.of(
+                new EntityData(0, EntityDataTypes.BYTE, (byte) 0x20),
+                new EntityData(8, EntityDataTypes.FLOAT, 0f)
+            )
+        );
 
         for (Player p : sendTo) sendPacket(p, packet);
     }
@@ -160,13 +161,15 @@ public class HMCCPacketManager extends PacketManager {
         float ROTATION_FACTOR = 256.0F / 360.0F;
         float yaw = location.getYaw() * ROTATION_FACTOR;
         float pitch = location.getPitch() * ROTATION_FACTOR;
-        PacketContainer packet = new PacketContainer(PacketType.Play.Server.ENTITY_LOOK);
-        packet.getIntegers().write(0, entityId);
-        packet.getBytes().write(0, (byte) yaw);
-        packet.getBytes().write(1, (byte) pitch);
 
-        //Bukkit.getLogger().info("DEBUG: Yaw: " + (location.getYaw() * ROTATION_FACTOR) + " | Original Yaw: " + location.getYaw());
-        packet.getBooleans().write(0, onGround);
+        // TODO: Verify that is the right packet (ProtocolLib called the packet type: ENTITY_LOOK)
+        WrapperPlayServerEntityRotation packet = new WrapperPlayServerEntityRotation(
+            entityId,
+            yaw,
+            pitch,
+            onGround
+        );
+
         for (Player p : sendTo) sendPacket(p, packet);
     }
 
@@ -178,13 +181,15 @@ public class HMCCPacketManager extends PacketManager {
     ) {
         float ROTATION_FACTOR = 256.0F / 360.0F;
         float yaw2 = yaw * ROTATION_FACTOR;
-        PacketContainer packet = new PacketContainer(PacketType.Play.Server.ENTITY_LOOK);
-        packet.getIntegers().write(0, entityId);
-        packet.getBytes().write(0, (byte) yaw2);
-        packet.getBytes().write(1, (byte) 0);
 
-        //Bukkit.getLogger().info("DEBUG: Yaw: " + (location.getYaw() * ROTATION_FACTOR) + " | Original Yaw: " + location.getYaw());
-        packet.getBooleans().write(0, onGround);
+        // TODO: Verify that is the right packet (ProtocolLib called the packet type: ENTITY_LOOK)
+        WrapperPlayServerEntityRotation packet = new WrapperPlayServerEntityRotation(
+            entityId,
+            yaw2,
+            0,
+            onGround
+        );
+
         for (Player p : sendTo) sendPacket(p, packet);
     }
 
@@ -213,9 +218,12 @@ public class HMCCPacketManager extends PacketManager {
             final int[] passengerIds,
             final @NotNull List<Player> sendTo
     ) {
-        PacketContainer packet = new PacketContainer(PacketType.Play.Server.MOUNT);
-        packet.getIntegers().write(0, mountId);
-        packet.getIntegerArrays().write(0, passengerIds);
+        // TODO: Verify that is the right packet (ProtocolLib called the packet type: MOUNT
+        WrapperPlayServerSetPassengers packet = new WrapperPlayServerSetPassengers(
+            mountId,
+            passengerIds
+        );
+
         for (final Player p : sendTo) {
             sendPacket(p, packet);
         }
@@ -249,13 +257,13 @@ public class HMCCPacketManager extends PacketManager {
             final @NotNull List<Player> sendTo
     ) {
         if (HMCCosmeticsAPI.getNMSVersion().contains("v1_19_R3") || HMCCosmeticsAPI.getNMSVersion().contains("v1_20_R1")) {
-            WrapperPlayServerNamedEntitySpawn wrapper = new WrapperPlayServerNamedEntitySpawn();
-            wrapper.setEntityID(entityId);
-            wrapper.setPlayerUUID(uuid);
-            wrapper.setPosition(location.toVector());
-            wrapper.setPitch(location.getPitch());
-            wrapper.setYaw(location.getYaw());
-            for (final Player p : sendTo) sendPacket(p, wrapper.getHandle());
+            WrapperPlayServerSpawnPlayer packet = new WrapperPlayServerSpawnPlayer(
+                entityId,
+                uuid,
+                SpigotConversionUtil.fromBukkitLocation(location)
+            );
+
+            for (final Player p : sendTo) sendPacket(p, packet);
             return;
         }
         sendEntitySpawnPacket(location, entityId, EntityType.PLAYER, uuid);
@@ -274,25 +282,29 @@ public class HMCCPacketManager extends PacketManager {
             final String NPCName,
             final List<Player> sendTo
     ) {
-        WrapperPlayServerPlayerInfo info = new WrapperPlayServerPlayerInfo();
-        info.setAction(EnumWrappers.PlayerInfoAction.ADD_PLAYER);
-
         String name = NPCName;
         while (name.length() > 16) {
             name = name.substring(16);
         }
 
-        WrappedGameProfile wrappedGameProfile = new WrappedGameProfile(uuid, name);
-        WrappedSignedProperty skinData = HMCCPlayerUtils.getSkin(skinnedPlayer);
-        if (skinData != null) wrappedGameProfile.getProperties().put("textures", skinData);
+        UserProfile userProfile = new UserProfile(uuid, name);
+        TextureProperty skinData = HMCCPlayerUtils.getSkin(skinnedPlayer);
+        if (skinData != null) {
+            userProfile.setTextureProperties(List.of(skinData));
+        }
 
-        info.getHandle().getPlayerInfoDataLists().write(1, Collections.singletonList(new PlayerInfoData(
-                wrappedGameProfile,
-                0,
-                EnumWrappers.NativeGameMode.CREATIVE,
-                WrappedChatComponent.fromText(name)
-        )));
-        for (final Player p : sendTo) sendPacket(p, info.getHandle());
+        WrapperPlayServerPlayerInfo packet = new WrapperPlayServerPlayerInfo(
+            WrapperPlayServerPlayerInfo.Action.ADD_PLAYER,
+            new WrapperPlayServerPlayerInfo.PlayerData(
+                Component.text(name),
+                userProfile,
+                GameMode.CREATIVE,
+                0
+            )
+        );
+
+
+        for (final Player p : sendTo) sendPacket(p, packet);
     }
 
     /**
@@ -316,13 +328,10 @@ public class HMCCPacketManager extends PacketManager {
          https://wiki.vg/Entity_metadata#Entity
          */
         final byte mask = 0x01 | 0x02 | 0x04 | 0x08 | 0x010 | 0x020 | 0x40;
-        PacketContainer packet = new PacketContainer(PacketType.Play.Server.ENTITY_METADATA);
-        packet.getModifier().writeDefaults();
-        packet.getIntegers().write(0, playerId);
-
-        final List<WrappedDataValue> wrappedDataValueList = Lists.newArrayList();
-        wrappedDataValueList.add(new WrappedDataValue(17, WrappedDataWatcher.Registry.get(Byte.class), mask));
-        packet.getDataValueCollectionModifier().write(0, wrappedDataValueList);
+        WrapperPlayServerEntityMetadata packet = new WrapperPlayServerEntityMetadata(
+            playerId,
+            List.of(new EntityData(17, EntityDataTypes.BYTE, mask))
+        );
 
         for (final Player p : sendTo) sendPacket(p, packet);
     }
@@ -339,9 +348,13 @@ public class HMCCPacketManager extends PacketManager {
             final UUID uuid,
             final List<Player> sendTo
     ) {
-        PacketContainer packet = new PacketContainer(PacketType.Play.Server.PLAYER_INFO_REMOVE);
-        packet.getUUIDLists().write(0, List.of(uuid));
-        for (final Player p : sendTo) sendPacket(p, packet);
+        WrapperPlayServerPlayerInfoRemove packet = new WrapperPlayServerPlayerInfoRemove(
+            List.of(uuid)
+        );
+
+        for (final Player p : sendTo) {
+            sendPacket(p, packet);
+        }
     }
 
     public static void sendLeashPacket(
@@ -367,15 +380,16 @@ public class HMCCPacketManager extends PacketManager {
             final boolean onGround,
             @NotNull List<Player> sendTo
     ) {
-        PacketContainer packet = new PacketContainer(PacketType.Play.Server.REL_ENTITY_MOVE);
-        WrapperPlayServerRelEntityMove wrapper = new WrapperPlayServerRelEntityMove(packet);
-        wrapper.setEntityID(entityId);
-        wrapper.setDx(to.getX() - from.getX());
-        wrapper.setDy(to.getY() - from.getY());
-        wrapper.setDz(to.getZ() - from.getZ());
-        wrapper.setOnGround(onGround);
+        WrapperPlayServerEntityRelativeMove packet = new WrapperPlayServerEntityRelativeMove(
+            entityId,
+            to.getX() - from.getX(),
+            to.getY() - from.getY(),
+            to.getZ() - from.getZ(),
+            onGround
+        );
+
         for (final Player p : sendTo) {
-            sendPacket(p, wrapper.getHandle());
+            sendPacket(p, packet);
         }
     }
 
@@ -390,8 +404,8 @@ public class HMCCPacketManager extends PacketManager {
         return viewers;
     }
 
-    public static void sendPacket(Player player, PacketContainer packet) {
+    public static void sendPacket(Player player, PacketWrapper<?> packet) {
         if (player == null) return;
-        ProtocolLibrary.getProtocolManager().sendServerPacket(player, packet, null,false);
+        PacketEvents.getAPI().getProtocolManager().sendPacket(player, packet);
     }
 }

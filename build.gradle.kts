@@ -24,10 +24,8 @@ allprojects {
         // Jitpack
         maven("https://jitpack.io")
 
-        // ProtocolLib repo
-        maven("https://repo.dmulloy2.net/repository/public/") //ProtocolLib Repo, constantly down
-        maven("https://repo.mineinabyss.com/releases/")
-        maven("https://repo.mineinabyss.com/snapshots/")
+        // PacketEvents
+        maven("https://repo.codemc.io/repository/maven-releases/")
 
         // PlaceholderAPI
         maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
@@ -77,7 +75,7 @@ allprojects {
         //compileOnly("org.spigotmc:spigot-api:1.18.2-R0.1-SNAPSHOT")
         compileOnly("io.papermc.paper:paper-api:1.19.4-R0.1-SNAPSHOT")
         compileOnly("org.jetbrains:annotations:24.1.0")
-        compileOnly("com.comphenix.protocol:ProtocolLib:5.3.0-SNAPSHOT")
+        compileOnly("com.github.retrooper:packetevents-spigot:2.4.0")
         compileOnly("me.clip:placeholderapi:2.11.6")
         compileOnly("com.ticxo.modelengine:ModelEngine:R4.0.6")
         compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.1.0-SNAPSHOT")
@@ -98,7 +96,7 @@ allprojects {
             exclude("net.kyori") // Already have adventure API
         }
         implementation("com.owen1212055:particlehelper:1.0.0-SNAPSHOT")
-        implementation("com.ticxo.playeranimator:PlayerAnimator:R1.2.7")
+        implementation("com.ticxo.playeranimator:PlayerAnimator:R1.2.8")
     }
 }
 

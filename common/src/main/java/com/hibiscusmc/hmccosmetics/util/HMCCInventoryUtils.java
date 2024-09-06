@@ -1,6 +1,5 @@
 package com.hibiscusmc.hmccosmetics.util;
 
-import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.hibiscusmc.hmccosmetics.HMCCosmeticsPlugin;
 import com.hibiscusmc.hmccosmetics.cosmetic.CosmeticSlot;
 import org.bukkit.NamespacedKey;
@@ -21,14 +20,14 @@ public class HMCCInventoryUtils {
      * @param slot The BUKKIT item slot to convert.
      * @return The ProtocolLib item slot that is returned
      */
-    public static EnumWrappers.ItemSlot itemBukkitSlot(final EquipmentSlot slot) {
+    public static EquipmentSlot itemBukkitSlot(final EquipmentSlot slot) {
         return switch (slot) {
-            case HEAD -> EnumWrappers.ItemSlot.HEAD;
-            case CHEST -> EnumWrappers.ItemSlot.CHEST;
-            case LEGS -> EnumWrappers.ItemSlot.LEGS;
-            case FEET -> EnumWrappers.ItemSlot.FEET;
-            case HAND -> EnumWrappers.ItemSlot.MAINHAND;
-            case OFF_HAND -> EnumWrappers.ItemSlot.OFFHAND;
+            case HEAD -> EquipmentSlot.HEAD;
+            case CHEST -> EquipmentSlot.CHEST;
+            case LEGS -> EquipmentSlot.LEGS;
+            case FEET -> EquipmentSlot.FEET;
+            case HAND -> EquipmentSlot.HAND;
+            case OFF_HAND -> EquipmentSlot.OFF_HAND;
         };
     }
 
@@ -55,14 +54,14 @@ public class HMCCInventoryUtils {
         };
     }
 
-    public static CosmeticSlot getItemSlotToCosmeticSlot(final EnumWrappers.ItemSlot slot) {
+    public static CosmeticSlot getItemSlotToCosmeticSlot(final com.github.retrooper.packetevents.protocol.player.EquipmentSlot slot) {
         return switch (slot) {
-            case HEAD -> CosmeticSlot.HELMET;
-            case CHEST -> CosmeticSlot.CHESTPLATE;
-            case LEGS -> CosmeticSlot.LEGGINGS;
-            case FEET -> CosmeticSlot.BOOTS;
-            case OFFHAND -> CosmeticSlot.OFFHAND;
-            case MAINHAND -> CosmeticSlot.MAINHAND;
+            case HELMET -> CosmeticSlot.HELMET;
+            case CHEST_PLATE -> CosmeticSlot.CHESTPLATE;
+            case LEGGINGS -> CosmeticSlot.LEGGINGS;
+            case BOOTS -> CosmeticSlot.BOOTS;
+            case OFF_HAND -> CosmeticSlot.OFFHAND;
+            case MAIN_HAND -> CosmeticSlot.MAINHAND;
             default -> null;
         };
     }
@@ -157,30 +156,16 @@ public class HMCCInventoryUtils {
         }
     }
 
-    public static EquipmentSlot getEquipmentSlot(@NotNull EnumWrappers.ItemSlot slot) {
-        switch (slot) {
-            case HEAD -> {
-                return EquipmentSlot.HEAD;
-            }
-            case CHEST -> {
-                return EquipmentSlot.CHEST;
-            }
-            case LEGS -> {
-                return EquipmentSlot.LEGS;
-            }
-            case FEET -> {
-                return EquipmentSlot.FEET;
-            }
-            case OFFHAND -> {
-                return EquipmentSlot.OFF_HAND;
-            }
-            case MAINHAND -> {
-                return EquipmentSlot.HAND;
-            }
-            default -> {
-                return null;
-            }
-        }
+    public static EquipmentSlot getEquipmentSlot(@NotNull com.github.retrooper.packetevents.protocol.player.EquipmentSlot slot) {
+        return switch (slot) {
+            case HELMET -> EquipmentSlot.HEAD;
+            case CHEST_PLATE -> EquipmentSlot.CHEST;
+            case LEGGINGS -> EquipmentSlot.LEGS;
+            case BOOTS -> EquipmentSlot.FEET;
+            case OFF_HAND -> EquipmentSlot.OFF_HAND;
+            case MAIN_HAND -> EquipmentSlot.HAND;
+            default -> null;
+        };
     }
 
     public static boolean isCosmeticItem(ItemStack itemStack) {
