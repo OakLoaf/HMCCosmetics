@@ -15,6 +15,7 @@ allprojects {
     apply(plugin = "java-library")
 
     repositories {
+        mavenLocal()
         mavenCentral()
 
         // Paper Repo
@@ -81,7 +82,7 @@ allprojects {
         compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.1.0-SNAPSHOT")
         compileOnly("it.unimi.dsi:fastutil:8.5.13")
         compileOnly("org.projectlombok:lombok:1.18.34")
-        compileOnly("me.lojosho:HibiscusCommons:0.4.1")
+        compileOnly("me.lojosho:HibiscusCommons:0.5.0")
 
         // Handled by Spigot Library Loader
         compileOnly("net.kyori:adventure-api:4.17.0")
