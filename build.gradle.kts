@@ -157,7 +157,7 @@ bukkit {
     main = "com.hibiscusmc.hmccosmetics.HMCCosmeticsPlugin"
     apiVersion = "1.19"
     authors = listOf("LoJoSho")
-    depend = listOf("HibiscusCommons", "PacketEvents")
+    depend = listOf("HibiscusCommons", "packetevents")
     softDepend = listOf("ModelEngine", "Oraxen", "ItemsAdder", "Geary", "HMCColor", "WorldGuard", "MythicMobs", "PlaceholderAPI", "SuperVanish", "PremiumVanish", "LibsDisguises", "Denizen", "MMOItems", "Eco")
     version = "${project.version}"
     loadBefore = listOf(
