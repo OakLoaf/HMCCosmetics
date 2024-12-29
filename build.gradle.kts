@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.hibiscusmc"
-version = "2.7.4-DEV-${getGitCommitHash()}"
+version = "2.7.4${getGitCommitHash()}"
 
 allprojects {
     apply(plugin = "java")
@@ -265,13 +265,21 @@ java {
 }
 
 fun getGitCommitHash(): String {
-    return try {
-        val process = ProcessBuilder("git", "rev-parse", "--short", "HEAD")
-            .redirectErrorStream(true)
-            .start()
+    var includeHash = true;
+    val includeHashVariable = System.getenv("HMCC_INCLUDE_HASH")
 
-        process.inputStream.bufferedReader().use { it.readLine().trim() }
-    } catch (e: Exception) {
-        "unknown" // Fallback if Git is not available or an error occurs
+    if (!includeHashVariable.isNullOrEmpty()) includeHash = includeHashVariable.toBoolean()
+
+    if (includeHash) {
+        return try {
+            val process = ProcessBuilder("git", "rev-parse", "--short", "HEAD")
+                .redirectErrorStream(true)
+                .start()
+
+            process.inputStream.bufferedReader().use { "-" + it.readLine().trim() }
+        } catch (e: Exception) {
+            "-unknown" // Fallback if Git is not available or an error occurs
+        }
     }
+    return ""
 }
