@@ -3,7 +3,7 @@ import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
 plugins {
     id("java")
     id("com.gradleup.shadow") version "8.3.2"
-    id("xyz.jpenilla.run-paper") version "2.2.0"
+    id("xyz.jpenilla.run-paper") version "2.3.1"
     id("net.minecrell.plugin-yml.bukkit") version "0.6.0"
 }
 
@@ -265,7 +265,7 @@ java {
 }
 
 fun getGitCommitHash(): String {
-    var includeHash = true;
+    var includeHash = true
     val includeHashVariable = System.getenv("HMCC_INCLUDE_HASH")
 
     if (!includeHashVariable.isNullOrEmpty()) includeHash = includeHashVariable.toBoolean()
