@@ -83,15 +83,15 @@ allprojects {
         compileOnly("me.lojosho:HibiscusCommons:0.5.1")
 
         // Handled by Spigot Library Loader
-        compileOnly("net.kyori:adventure-api:4.17.0")
-        compileOnly("net.kyori:adventure-text-minimessage:4.17.0")
-        compileOnly("net.kyori:adventure-platform-bukkit:4.3.3")
+        compileOnly("net.kyori:adventure-api:4.18.0")
+        compileOnly("net.kyori:adventure-text-minimessage:4.18.0")
+        compileOnly("net.kyori:adventure-platform-bukkit:4.3.4")
 
         annotationProcessor("org.projectlombok:lombok:1.18.34")
         testCompileOnly("org.projectlombok:lombok:1.18.34")
         testAnnotationProcessor("org.projectlombok:lombok:1.18.34")
 
-        implementation("dev.triumphteam:triumph-gui:3.1.10") {
+        implementation("dev.triumphteam:triumph-gui:3.1.11") {
             exclude("net.kyori") // Already have adventure API
         }
         implementation("com.owen1212055:particlehelper:1.0.0-SNAPSHOT")
