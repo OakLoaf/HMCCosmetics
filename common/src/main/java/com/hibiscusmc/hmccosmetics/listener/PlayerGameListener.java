@@ -70,10 +70,6 @@ public class PlayerGameListener implements Listener {
         registerEntityUseListener();
         registerSlotChangeListener();
         registerPassengerSetListener();
-
-        //registerLookMovement();
-        //registerMoveListener();
-        //registerTeleportMovement();
     }
 
     @EventHandler(priority = EventPriority.LOW)
@@ -703,58 +699,6 @@ public class PlayerGameListener implements Listener {
                 if (user == null) return;
                 if (user.getUserEmoteManager().isPlayingEmote() || user.isInWardrobe()) {
                     event.setCancelled(true);
-                }
-            }
-        });
-    }
-
-    private void registerLookMovement() {
-        ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(HMCCosmeticsPlugin.getInstance(), ListenerPriority.NORMAL, PacketType.Play.Client.LOOK) {
-            @Override
-            public void onPacketReceiving(PacketEvent event) {
-                // TODO: Finish
-                MessagesUtil.sendDebugMessages("Look Packet ");
-                Player player = event.getPlayer();
-                if (event.getPlayer() == null) return;
-                CosmeticUser user = CosmeticUsers.getUser(player);
-                if (user == null) return;
-                if (user.isBackpackSpawned()) {
-                    user.getUserBackpackManager().getEntityManager().setRotation(Math.round(event.getPacket().getFloat().read(0)));
-                }
-            }
-        });
-    }
-
-    private void registerMoveListener() {
-        ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(HMCCosmeticsPlugin.getInstance(), ListenerPriority.NORMAL, PacketType.Play.Client.POSITION) {
-            @Override
-            public void onPacketReceiving(PacketEvent event) {
-                // TODO: Finish
-                MessagesUtil.sendDebugMessages("Position Packet ");
-                Player player = event.getPlayer();
-                if (event.getPlayer() == null) return;
-                CosmeticUser user = CosmeticUsers.getUser(player);
-                if (user == null) return;
-                if (user.isBackpackSpawned()) {
-                    // The yaw follows the head, which makes it look weird and do weird things when moving around
-                    user.getUserBackpackManager().getEntityManager().teleport(new Location(player.getWorld(), event.getPacket().getDoubles().read(0), event.getPacket().getDoubles().read(1), event.getPacket().getDoubles().read(2), event.getPacket().getFloat().read(0), event.getPacket().getFloat().read(1)));
-                }
-            }
-        });
-    }
-
-    private void registerTeleportMovement() {
-        ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(HMCCosmeticsPlugin.getInstance(), ListenerPriority.NORMAL, PacketType.Play.Client.POSITION_LOOK) {
-            @Override
-            public void onPacketReceiving(PacketEvent event) {
-                // TODO: Finish
-                MessagesUtil.sendDebugMessages("Teleport Packet ");
-                Player player = event.getPlayer();
-                if (event.getPlayer() == null) return;
-                CosmeticUser user = CosmeticUsers.getUser(player);
-                if (user == null) return;
-                if (user.isBackpackSpawned()) {
-                    Bukkit.getScheduler().runTask(HMCCosmeticsPlugin.getInstance(), () -> user.updateCosmetic(CosmeticSlot.BACKPACK));
                 }
             }
         });
