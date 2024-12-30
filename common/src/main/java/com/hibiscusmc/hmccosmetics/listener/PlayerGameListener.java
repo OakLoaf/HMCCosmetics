@@ -676,17 +676,12 @@ public class PlayerGameListener implements Listener {
                 int entityId = packet.getEntityId();
 
                 MessagesUtil.sendDebugMessages("Mount Packet Sent - Read - EntityID: " + entityId);
-                Entity entity = HMCCServerUtils.getEntity(entityId);
-                if (entity == null) return;
 
                 CosmeticUser viewerUser = CosmeticUsers.getUser(entityId);
                 if (viewerUser == null) return;
                 if (viewerUser.isInWardrobe()) return;
 
-
-
-
-                CosmeticUser user = CosmeticUsers.getUser(entity.getUniqueId());
+                CosmeticUser user = CosmeticUsers.getUser(entityId);
                 if (user == null) return;
                 MessagesUtil.sendDebugMessages("Mount Packet Sent - " + user.getUniqueId());
 
