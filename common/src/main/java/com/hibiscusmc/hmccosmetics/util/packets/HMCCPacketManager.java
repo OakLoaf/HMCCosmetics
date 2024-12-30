@@ -406,6 +406,6 @@ public class HMCCPacketManager extends PacketManager {
 
     public static void sendPacket(Player player, PacketWrapper<?> packet) {
         if (player == null) return;
-        PacketEvents.getAPI().getProtocolManager().sendPacket(player, packet);
+        PacketEvents.getAPI().getPlayerManager().sendPacket(player, packet);
     }
 }

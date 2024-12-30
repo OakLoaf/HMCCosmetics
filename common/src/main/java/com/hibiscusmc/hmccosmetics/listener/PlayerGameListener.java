@@ -7,12 +7,7 @@ import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.player.Equipment;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientClickWindow;
-import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerPosition;
-import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerRotation;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityEquipment;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityStatus;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowItems;
+import com.github.retrooper.packetevents.wrapper.play.server.*;
 import com.hibiscusmc.hmccosmetics.HMCCosmeticsPlugin;
 import com.hibiscusmc.hmccosmetics.api.events.PlayerCosmeticPostEquipEvent;
 import com.hibiscusmc.hmccosmetics.config.Settings;
@@ -34,9 +29,6 @@ import com.hibiscusmc.hmccosmetics.util.MessagesUtil;
 import com.hibiscusmc.hmccosmetics.util.packets.HMCCPacketManager;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import me.lojosho.hibiscuscommons.api.events.*;
-import me.lojosho.hibiscuscommons.hooks.Hook;
-import me.lojosho.hibiscuscommons.hooks.items.HookItemAdder;
-import me.lojosho.hibiscuscommons.hooks.items.HookNexo;
 import me.lojosho.hibiscuscommons.util.packets.PacketManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -672,17 +664,27 @@ public class PlayerGameListener implements Listener {
     }
 
     private void registerPassengerSetListener() {
-        ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(HMCCosmeticsPlugin.getInstance(), ListenerPriority.NORMAL, PacketType.Play.Server.MOUNT) {
+        PacketEvents.getAPI().getEventManager().registerListener(new PacketListenerAbstract() {
+
             @Override
-            public void onPacketSending(PacketEvent event) {
-                CosmeticUser viewerUser = CosmeticUsers.getUser(event.getPlayer().getUniqueId());
+            public void onPacketSend(PacketSendEvent event) {
+                if (event.getPacketType() != PacketType.Play.Server.SET_PASSENGERS) {
+                    return;
+                }
+
+                WrapperPlayServerSetPassengers packet = new WrapperPlayServerSetPassengers(event);
+                int entityId = packet.getEntityId();
+
+                MessagesUtil.sendDebugMessages("Mount Packet Sent - Read - EntityID: " + entityId);
+                Entity entity = HMCCServerUtils.getEntity(entityId);
+                if (entity == null) return;
+
+                CosmeticUser viewerUser = CosmeticUsers.getUser(entityId);
                 if (viewerUser == null) return;
                 if (viewerUser.isInWardrobe()) return;
 
-                int ownerId = event.getPacket().getIntegers().read(0);
-                MessagesUtil.sendDebugMessages("Mount Packet Sent - Read - EntityID: " + ownerId);
-                Entity entity = HMCCServerUtils.getEntity(ownerId);
-                if (entity == null) return;
+
+
 
                 CosmeticUser user = CosmeticUsers.getUser(entity.getUniqueId());
                 if (user == null) return;
@@ -692,12 +694,12 @@ public class PlayerGameListener implements Listener {
                 if (user.getUserBackpackManager() == null) return;
 
                 // Basically, take the original passengers and "bump" them to the end of the list
-                int[] originalPassengers = event.getPacket().getIntegerArrays().read(0);
+                int[] originalPassengers = packet.getPassengers();
                 List<Integer> passengers = new ArrayList<>(user.getUserBackpackManager().getEntityManager().getIds());
 
                 passengers.addAll(Arrays.stream(originalPassengers).boxed().toList());
 
-                event.getPacket().getIntegerArrays().write(0, passengers.stream().mapToInt(Integer::intValue).toArray());
+                packet.setPassengers(passengers.stream().mapToInt(Integer::intValue).toArray());
             }
         });
     }
