@@ -29,11 +29,14 @@ import com.hibiscusmc.hmccosmetics.user.CosmeticUsers;
 import com.hibiscusmc.hmccosmetics.user.manager.UserEmoteManager;
 import com.hibiscusmc.hmccosmetics.user.manager.UserWardrobeManager;
 import com.hibiscusmc.hmccosmetics.util.HMCCInventoryUtils;
+import com.hibiscusmc.hmccosmetics.util.HMCCServerUtils;
 import com.hibiscusmc.hmccosmetics.util.MessagesUtil;
 import com.hibiscusmc.hmccosmetics.util.packets.HMCCPacketManager;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import me.lojosho.hibiscuscommons.api.events.*;
+import me.lojosho.hibiscuscommons.hooks.Hook;
 import me.lojosho.hibiscuscommons.hooks.items.HookItemAdder;
+import me.lojosho.hibiscuscommons.hooks.items.HookNexo;
 import me.lojosho.hibiscuscommons.util.packets.PacketManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -71,10 +74,7 @@ public class PlayerGameListener implements Listener {
         registerPlayerArmListener();
         registerEntityUseListener();
         registerSlotChangeListener();
-
-        //registerLookMovement();
-        //registerMoveListener();
-        //registerTeleportMovement();
+        registerPassengerSetListener();
     }
 
     @EventHandler(priority = EventPriority.LOW)
@@ -384,6 +384,10 @@ public class PlayerGameListener implements Listener {
     public void onPlayerCosmeticEquip(PlayerCosmeticPostEquipEvent event) {
         CosmeticUser user = event.getUser();
         if (user.isInWardrobe() && event.getCosmetic().getSlot().equals(CosmeticSlot.BALLOON)) {
+            if (user.getBalloonManager() == null) {
+                MessagesUtil.sendDebugMessages("Balloon Manager is null? " + user.getEntity().getName());
+                return;
+            }
             CosmeticBalloonType cosmetic = (CosmeticBalloonType) event.getCosmetic();
             Location npclocation = user.getWardrobeManager().getNpcLocation().clone().add(cosmetic.getBalloonOffset());
             // We know that no other entity besides a regular player will be in the wardrobe
@@ -430,21 +434,6 @@ public class PlayerGameListener implements Listener {
         user.showCosmetics(CosmeticUser.HiddenReason.PLUGIN);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onHookReload(HibiscusHookReload event) {
-        if (event.getHook() instanceof HookItemAdder hook) {
-            switch (event.getReloadType()) {
-                case INITIAL -> {
-                    HMCCosmeticsPlugin.setup();
-                }
-                case RELOAD -> {
-                    if (!Settings.isItemsAdderChangeReload()) return;
-                    HMCCosmeticsPlugin.setup();
-                }
-            }
-        }
-    }
-
     // These emote mostly handles emotes from other plugins, such as ItemsAdder
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onPlayerPlayEmote(HibiscusPlayerEmotePlayEvent event) {
@@ -458,6 +447,22 @@ public class PlayerGameListener implements Listener {
         CosmeticUser user = CosmeticUsers.getUser(event.getPlayer());
         if (user == null) return;
         user.showCosmetics(CosmeticUser.HiddenReason.EMOTE);
+    }
+
+    @EventHandler(priority = EventPriority.LOW)
+    public void onPlayerHibiscusPose(HibiscusPlayerPoseEvent event) {
+        if (event.isGettingUp()) return;
+        CosmeticUser user = CosmeticUsers.getUser(event.getPlayer());
+        if (user == null) return;
+        user.hideCosmetics(CosmeticUser.HiddenReason.PLUGIN);
+    }
+
+    @EventHandler(priority = EventPriority.LOW)
+    public void onPlayerHibiscusGetUpPose(HibiscusPlayerPoseEvent event) {
+        if (!event.isGettingUp()) return;
+        CosmeticUser user = CosmeticUsers.getUser(event.getPlayer());
+        if (user == null) return;
+        user.showCosmetics(CosmeticUser.HiddenReason.PLUGIN);
     }
 
     private void registerInventoryClickListener() {
@@ -615,6 +620,7 @@ public class PlayerGameListener implements Listener {
                     switch (slot) {
                         case MAIN_HAND -> {
                             if (user.getPlayer() == event.getPlayer()) continue; // When a player scrolls real fast, it messes up the mainhand. This fixes it
+                            if (user.getPlayer() != null && user.getPlayer().isInvisible()) continue; // Fixes integration with GSit still showing mainhand even when hidden
                             equipment.setItem(SpigotConversionUtil.fromBukkitItemStack(user.getPlayer().getInventory().getItemInMainHand()));
                         }
                         default -> {
@@ -665,6 +671,37 @@ public class PlayerGameListener implements Listener {
         });
     }
 
+    private void registerPassengerSetListener() {
+        ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(HMCCosmeticsPlugin.getInstance(), ListenerPriority.NORMAL, PacketType.Play.Server.MOUNT) {
+            @Override
+            public void onPacketSending(PacketEvent event) {
+                CosmeticUser viewerUser = CosmeticUsers.getUser(event.getPlayer().getUniqueId());
+                if (viewerUser == null) return;
+                if (viewerUser.isInWardrobe()) return;
+
+                int ownerId = event.getPacket().getIntegers().read(0);
+                MessagesUtil.sendDebugMessages("Mount Packet Sent - Read - EntityID: " + ownerId);
+                Entity entity = HMCCServerUtils.getEntity(ownerId);
+                if (entity == null) return;
+
+                CosmeticUser user = CosmeticUsers.getUser(entity.getUniqueId());
+                if (user == null) return;
+                MessagesUtil.sendDebugMessages("Mount Packet Sent - " + user.getUniqueId());
+
+                if (!user.hasCosmeticInSlot(CosmeticSlot.BACKPACK)) return;
+                if (user.getUserBackpackManager() == null) return;
+
+                // Basically, take the original passengers and "bump" them to the end of the list
+                int[] originalPassengers = event.getPacket().getIntegerArrays().read(0);
+                List<Integer> passengers = new ArrayList<>(user.getUserBackpackManager().getEntityManager().getIds());
+
+                passengers.addAll(Arrays.stream(originalPassengers).boxed().toList());
+
+                event.getPacket().getIntegerArrays().write(0, passengers.stream().mapToInt(Integer::intValue).toArray());
+            }
+        });
+    }
+
     private void registerPlayerArmListener() {
         PacketEvents.getAPI().getEventManager().registerListener(new PacketListenerAbstract() {
 
@@ -711,79 +748,6 @@ public class PlayerGameListener implements Listener {
             }
         });
     }
-
-    private void registerLookMovement() {
-        PacketEvents.getAPI().getEventManager().registerListener(new PacketListenerAbstract() {
-
-            @Override
-            public void onPacketReceive(PacketReceiveEvent event) {
-                // TODO: Ensure this is the equivalent of ProtocolLib's (LOOK packet type)
-                if (event.getPacketType() != PacketType.Play.Client.PLAYER_ROTATION) {
-                    return;
-                }
-
-                // TODO: Finish
-                MessagesUtil.sendDebugMessages("Look Packet ");
-                if (event.getPlayer() == null) return;
-                CosmeticUser user = CosmeticUsers.getUser((Player) event.getPlayer());
-                if (user == null) return;
-                if (user.isBackpackSpawned()) {
-                    WrapperPlayClientPlayerRotation packet = new WrapperPlayClientPlayerRotation(event);
-                    user.getUserBackpackManager().getEntityManager().setRotation(Math.round(packet.getYaw()));
-                }
-            }
-        });
-    }
-
-    private void registerMoveListener() {
-        PacketEvents.getAPI().getEventManager().registerListener(new PacketListenerAbstract() {
-
-            @Override
-            public void onPacketReceive(PacketReceiveEvent event) {
-                if (event.getPacketType() != PacketType.Play.Client.PLAYER_POSITION) {
-                    return;
-                }
-
-                // TODO: Finish
-                MessagesUtil.sendDebugMessages("Position Packet ");
-                if (event.getPlayer() == null) return;
-                Player player = (Player) event.getPlayer();
-                CosmeticUser user = CosmeticUsers.getUser(player);
-                if (user == null) return;
-                if (user.isBackpackSpawned()) {
-                    WrapperPlayClientPlayerPosition packet = new WrapperPlayClientPlayerPosition(event);
-                    // The yaw follows the head, which makes it look weird and do weird things when moving around
-                    user.getUserBackpackManager().getEntityManager().teleport(SpigotConversionUtil.toBukkitLocation(player.getWorld(), packet.getLocation()));
-                }
-            }
-        });
-    }
-
-    private void registerTeleportMovement() {
-        PacketEvents.getAPI().getEventManager().registerListener(new PacketListenerAbstract() {
-
-            @Override
-            public void onPacketReceive(PacketReceiveEvent event) {
-                // TODO: Ensure this is the equivalent of ProtocolLib's (POSITION_LOOK packet type)
-                if (event.getPacketType() != PacketType.Play.Client.PLAYER_POSITION_AND_ROTATION) {
-                    return;
-                }
-
-                // TODO: Finish
-                MessagesUtil.sendDebugMessages("Teleport Packet ");
-                if (event.getPlayer() == null) return;
-                CosmeticUser user = CosmeticUsers.getUser((Player) event.getPlayer());
-                if (user == null) return;
-                if (user.isBackpackSpawned()) {
-                    Bukkit.getScheduler().runTask(HMCCosmeticsPlugin.getInstance(), () -> user.updateCosmetic(CosmeticSlot.BACKPACK));
-                }
-            }
-        });
-    }
-
-
-
-
 
     @Nullable
     private EquipmentSlot getArmorSlot(final Material material) {

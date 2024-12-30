@@ -31,16 +31,17 @@ import java.util.logging.Level;
 
 public class UserBalloonManager {
 
-    private CosmeticUser user;
+    private final CosmeticUser user;
     @Getter
     private BalloonType balloonType;
     private CosmeticBalloonType cosmeticBalloonType;
     @Getter
     private UserBalloonPufferfish pufferfish;
     private final ArmorStand modelEntity;
+
     public UserBalloonManager(CosmeticUser user, @NotNull Location location) {
         this.user = user;
-        this.pufferfish = new UserBalloonPufferfish(user.getUniqueId(), NMSHandlers.getHandler().getNextEntityId(), UUID.randomUUID());
+        this.pufferfish = new UserBalloonPufferfish(user.getUniqueId(), NMSHandlers.getHandler().getUtilHandler().getNextEntityId(), UUID.randomUUID());
         this.modelEntity = location.getWorld().spawn(location, ArmorStand.class, (e) -> {
             e.setInvisible(true);
             e.setGravity(false);
@@ -99,6 +100,7 @@ public class UserBalloonManager {
     }
 
     public void remove() {
+        pufferfish.destroyPufferfish();
         if (balloonType == BalloonType.MODELENGINE) {
             final ModeledEntity entity = ModelEngineAPI.getModeledEntity(modelEntity);
             if (entity == null) {
@@ -157,6 +159,7 @@ public class UserBalloonManager {
     public int getPufferfishBalloonId() {
         return pufferfish.getPufferFishEntityId();
     }
+
     public UUID getPufferfishBalloonUniqueId() {
         return pufferfish.getUuid();
     }

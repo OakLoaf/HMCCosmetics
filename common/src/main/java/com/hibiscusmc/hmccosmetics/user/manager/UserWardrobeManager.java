@@ -83,8 +83,11 @@ public class UserWardrobeManager {
         this.viewingLocation = wardrobeLocation.getViewerLocation();
         this.npcLocation = wardrobeLocation.getNpcLocation();
 
+        String defaultMenu = wardrobe.getDefaultMenu();
+        if (defaultMenu != null && Menus.hasMenu(defaultMenu)) this.lastOpenMenu = Menus.getMenu(defaultMenu);
+        else this.lastOpenMenu = Menus.getDefaultMenu();
+
         wardrobeStatus = WardrobeStatus.SETUP;
-        this.lastOpenMenu = Menus.getDefaultMenu();
     }
 
     public void start() {
@@ -129,7 +132,7 @@ public class UserWardrobeManager {
                 HMCCPacketManager.sendFakePlayerSpawnPacket(npcLocation, WARDROBE_UUID, NPC_ID, viewer);
                 HMCCPacketManager.sendPlayerOverlayPacket(NPC_ID, viewer);
                 MessagesUtil.sendDebugMessages("Spawned Fake Player on " + npcLocation);
-                NMSHandlers.getHandler().hideNPCName(player, npcName);
+                NMSHandlers.getHandler().getPacketHandler().sendScoreboardHideNamePacket(player, npcName);
             }, 4);
 
             // Location
