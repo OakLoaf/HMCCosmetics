@@ -24,7 +24,6 @@ import com.hibiscusmc.hmccosmetics.user.CosmeticUsers;
 import com.hibiscusmc.hmccosmetics.user.manager.UserEmoteManager;
 import com.hibiscusmc.hmccosmetics.user.manager.UserWardrobeManager;
 import com.hibiscusmc.hmccosmetics.util.HMCCInventoryUtils;
-import com.hibiscusmc.hmccosmetics.util.HMCCServerUtils;
 import com.hibiscusmc.hmccosmetics.util.MessagesUtil;
 import com.hibiscusmc.hmccosmetics.util.packets.HMCCPacketManager;
 import io.github.retrooper.packetevents.util.SpigotConversionUtil;
