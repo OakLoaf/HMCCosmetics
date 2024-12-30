@@ -1,11 +1,13 @@
 package com.hibiscusmc.hmccosmetics.util.packets;
 
 import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.netty.channel.ChannelHelper;
 import com.github.retrooper.packetevents.protocol.attribute.Attributes;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes;
 import com.github.retrooper.packetevents.protocol.player.GameMode;
 import com.github.retrooper.packetevents.protocol.player.TextureProperty;
+import com.github.retrooper.packetevents.protocol.player.User;
 import com.github.retrooper.packetevents.protocol.player.UserProfile;
 import com.github.retrooper.packetevents.util.Vector3d;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
@@ -27,6 +29,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -238,7 +241,6 @@ public class HMCCPacketManager extends PacketManager {
             final int[] passengerIds,
             final @NotNull List<Player> sendTo
     ) {
-        // TODO: Verify that is the right packet (ProtocolLib called the packet type: MOUNT
         WrapperPlayServerSetPassengers packet = new WrapperPlayServerSetPassengers(
             mountId,
             passengerIds
@@ -427,5 +429,17 @@ public class HMCCPacketManager extends PacketManager {
     public static void sendPacket(Player player, PacketWrapper<?> packet) {
         if (player == null) return;
         PacketEvents.getAPI().getPlayerManager().sendPacket(player, packet);
+    }
+
+    public static @Nullable User findUser(int entityId) {
+        return PacketEvents.getAPI().getProtocolManager().getUsers().stream()
+            .filter(foundUser -> foundUser.getEntityId() == entityId)
+            .findFirst()
+            .orElse(null);
+    }
+
+    public static @Nullable UUID findUUID(int entityId) {
+        User user = findUser(entityId);
+        return user != null ? user.getUUID() : null;
     }
 }

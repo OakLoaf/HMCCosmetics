@@ -4,6 +4,7 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerAbstract;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
+import com.github.retrooper.packetevents.protocol.attribute.Attributes;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.player.Equipment;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientClickWindow;
@@ -21,6 +22,7 @@ import com.hibiscusmc.hmccosmetics.cosmetic.types.CosmeticEmoteType;
 import com.hibiscusmc.hmccosmetics.gui.Menu;
 import com.hibiscusmc.hmccosmetics.user.CosmeticUser;
 import com.hibiscusmc.hmccosmetics.user.CosmeticUsers;
+import com.hibiscusmc.hmccosmetics.user.manager.UserBackpackManager;
 import com.hibiscusmc.hmccosmetics.user.manager.UserEmoteManager;
 import com.hibiscusmc.hmccosmetics.user.manager.UserWardrobeManager;
 import com.hibiscusmc.hmccosmetics.util.HMCCInventoryUtils;
@@ -64,6 +66,7 @@ public class PlayerGameListener implements Listener {
         registerEntityUseListener();
         registerSlotChangeListener();
         registerPassengerSetListener();
+        registerEntityScaleListener();
     }
 
     @EventHandler(priority = EventPriority.LOW)
@@ -646,11 +649,13 @@ public class PlayerGameListener implements Listener {
                 WrapperPlayServerEntityStatus packet = new WrapperPlayServerEntityStatus(event);
                 int entityId = packet.getEntityId();
                 int status = packet.getStatus();
+                UUID uuid = HMCCPacketManager.findUUID(entityId);
+                if (uuid == null) return;
 
                 MessagesUtil.sendDebugMessages("EntityStatus Initial " + entityId + " - " + status);
                 if (status != 55) return;
 
-                CosmeticUser user = CosmeticUsers.getUser(entityId);
+                CosmeticUser user = CosmeticUsers.getUser(uuid);
                 if (user == null) {
                     MessagesUtil.sendDebugMessages("EntityStatus User is null");
                     return;
@@ -672,14 +677,16 @@ public class PlayerGameListener implements Listener {
 
                 WrapperPlayServerSetPassengers packet = new WrapperPlayServerSetPassengers(event);
                 int entityId = packet.getEntityId();
+                UUID uuid = HMCCPacketManager.findUUID(entityId);
+                if (uuid == null) return;
 
                 MessagesUtil.sendDebugMessages("Mount Packet Sent - Read - EntityID: " + entityId);
 
-                CosmeticUser viewerUser = CosmeticUsers.getUser(entityId);
+                CosmeticUser viewerUser = CosmeticUsers.getUser(event.getUser().getUUID());
                 if (viewerUser == null) return;
                 if (viewerUser.isInWardrobe()) return;
 
-                CosmeticUser user = CosmeticUsers.getUser(entityId);
+                CosmeticUser user = CosmeticUsers.getUser(uuid);
                 if (user == null) return;
                 MessagesUtil.sendDebugMessages("Mount Packet Sent - " + user.getUniqueId());
 
@@ -739,6 +746,41 @@ public class PlayerGameListener implements Listener {
                 if (user == null) return;
                 if (user.getUserEmoteManager().isPlayingEmote() || user.isInWardrobe()) {
                     event.setCancelled(true);
+                }
+            }
+        });
+    }
+
+    private void registerEntityScaleListener() {
+        PacketEvents.getAPI().getEventManager().registerListener(new PacketListenerAbstract() {
+
+            @Override
+            public void onPacketSend(PacketSendEvent event) {
+                if (event.getPacketType() != PacketType.Play.Server.UPDATE_ATTRIBUTES) {
+                    return;
+                }
+
+                WrapperPlayServerUpdateAttributes packet = new WrapperPlayServerUpdateAttributes(event);
+                int entityId = packet.getEntityId();
+
+                WrapperPlayServerUpdateAttributes.Property scaleProperty = packet.getProperties().stream()
+                    .filter(property -> property.getAttribute() == Attributes.GENERIC_SCALE)
+                    .findFirst()
+                    .orElse(null);
+                if (scaleProperty == null) return;
+
+                UUID uuid = HMCCPacketManager.findUUID(entityId);
+                if (uuid == null) return;
+
+                CosmeticUser cosmeticUser = CosmeticUsers.getUser(uuid);
+                if (cosmeticUser == null) return;
+                if (cosmeticUser.isInWardrobe()) return;
+
+                UserBackpackManager backpack = cosmeticUser.getUserBackpackManager();
+                if (backpack != null) {
+                    for (int cosmeticId : backpack.getEntityManager().getIds()) {
+                        HMCCPacketManager.sendScalePacket(cosmeticId, scaleProperty.getValue(), List.of((Player) event.getPlayer()));
+                    }
                 }
             }
         });
