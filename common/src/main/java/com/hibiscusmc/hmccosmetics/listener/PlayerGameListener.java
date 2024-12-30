@@ -596,14 +596,15 @@ public class PlayerGameListener implements Listener {
                     return;
                 }
 
-                WrapperPlayServerEntityEquipment packet = new WrapperPlayServerEntityEquipment(event);
+                if (event.getPlayer() == null) return;
+                Player player = (Player) event.getPlayer();
 
-                int entityID = packet.getEntityId();
                 // User
-                CosmeticUser user = CosmeticUsers.getUser(entityID);
+                CosmeticUser user = CosmeticUsers.getUser(player);
                 if (user == null) return;
                 if (user.isInWardrobe()) return;
 
+                WrapperPlayServerEntityEquipment packet = new WrapperPlayServerEntityEquipment(event);
                 List<Equipment> entityEquipment = packet.getEquipment();
                 for (Equipment equipment : entityEquipment) {
                     com.github.retrooper.packetevents.protocol.player.EquipmentSlot slot = equipment.getSlot();
