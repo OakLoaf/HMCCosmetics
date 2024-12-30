@@ -1,6 +1,7 @@
 package com.hibiscusmc.hmccosmetics.util.packets;
 
 import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.protocol.attribute.Attributes;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes;
 import com.github.retrooper.packetevents.protocol.player.GameMode;
@@ -109,6 +110,25 @@ public class HMCCPacketManager extends PacketManager {
             List.of(
                 new EntityData(0, EntityDataTypes.BYTE, (byte) 0x21),
                 new EntityData(15, EntityDataTypes.BYTE, (byte) 0x10)
+            )
+        );
+
+        for (Player p : sendTo) sendPacket(p, packet);
+    }
+
+    public static void sendScalePacket(
+            int entityId,
+            double scale,
+            List<Player> sendTo
+    ) {
+        WrapperPlayServerUpdateAttributes packet = new WrapperPlayServerUpdateAttributes(
+            entityId,
+            List.of(
+                new WrapperPlayServerUpdateAttributes.Property(
+                    Attributes.GENERIC_SCALE,
+                    scale,
+                    Collections.emptyList()
+                )
             )
         );
 
