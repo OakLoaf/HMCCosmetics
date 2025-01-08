@@ -123,7 +123,7 @@ tasks {
 
         downloadPlugins {
             hangar("PlaceholderAPI", "2.11.6")
-            url("https://ci.dmulloy2.net/job/ProtocolLib/lastSuccessfulBuild/artifact/build/libs/ProtocolLib.jar")
+            modrinth("packetevents", "2.7.0")
             url("https://download.luckperms.net/1567/bukkit/loader/LuckPerms-Bukkit-5.4.150.jar")
         }
     }
