@@ -532,9 +532,12 @@ public class CosmeticUser {
     /**
      * This gets the entity associated with the user.
      * @return Entity
+     * @deprecated Use {@link CosmeticUser#getPlayer()}
      */
+    @Deprecated
     public Entity getEntity() {
-        return Bukkit.getEntity(uniqueId);
+        // TODO: Find out why this previously returned Bukkit#getEntity
+        return getPlayer();
     }
 
     public Color getCosmeticColor(CosmeticSlot slot) {
