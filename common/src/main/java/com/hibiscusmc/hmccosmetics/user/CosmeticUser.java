@@ -15,6 +15,7 @@ import com.hibiscusmc.hmccosmetics.cosmetic.types.CosmeticBalloonType;
 import com.hibiscusmc.hmccosmetics.cosmetic.types.CosmeticMainhandType;
 import com.hibiscusmc.hmccosmetics.database.UserData;
 import com.hibiscusmc.hmccosmetics.gui.Menus;
+import com.hibiscusmc.hmccosmetics.hooks.EntityHook;
 import com.hibiscusmc.hmccosmetics.user.manager.UserBackpackManager;
 import com.hibiscusmc.hmccosmetics.user.manager.UserBalloonManager;
 import com.hibiscusmc.hmccosmetics.user.manager.UserEmoteManager;
@@ -27,6 +28,7 @@ import lombok.Getter;
 import me.lojosho.hibiscuscommons.hooks.Hooks;
 import me.lojosho.hibiscuscommons.util.InventoryUtils;
 import me.lojosho.hibiscuscommons.util.packets.PacketManager;
+import net.citizensnpcs.api.CitizensAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -530,14 +532,24 @@ public class CosmeticUser {
     }
 
     /**
-     * This gets the entity associated with the user.
+     * This gets the entity associated with the user, if overriding please ensure that the method you use is thread-safe
      * @return Entity
      * @deprecated Use {@link CosmeticUser#getPlayer()}
      */
-    @Deprecated
     public Entity getEntity() {
-        // TODO: Find out why this previously returned Bukkit#getEntity
-        return getPlayer();
+        Player player = this.getPlayer();
+        if (player != null) {
+            return player;
+        }
+
+        for (EntityHook hook : HMCCosmeticsPlugin.getInstance().getEntityHooks()) {
+            Entity entity = hook.getEntity(uniqueId);
+            if (entity != null) {
+                return entity;
+            }
+        }
+
+        return null;
     }
 
     public Color getCosmeticColor(CosmeticSlot slot) {
